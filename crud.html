@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,34 +11,52 @@
 <body>
 
     <h1>CloudStock</h1>
-    <p>Inventario en la Nube</p>
+
+    <p>Gestión de inventario</p>
 
     <div class="contenedor">
+
         <h2>Agregar producto</h2>
 
         <input type="text" id="nombre" placeholder="Nombre del producto">
+
         <input type="number" id="precio" placeholder="Precio">
+
         <input type="number" id="stock" placeholder="Stock">
 
-        <button onclick="agregarProducto()">Agregar producto</button>
+        <button onclick="agregarProducto()">
+            Agregar producto
+        </button>
 
         <h2>Productos</h2>
 
+        <input
+            type="text"
+            id="buscar"
+            placeholder="Buscar producto..."
+            onkeyup="buscarProducto()"
+        >
+
         <table>
+
             <thead>
                 <tr>
                     <th>Producto</th>
                     <th>Precio</th>
                     <th>Stock</th>
-                    <th>Acción</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
 
-            <tbody id="tablaProductos"></tbody>
+            <tbody id="tablaProductos">
+            </tbody>
+
         </table>
+
     </div>
 
     <script>
+
         function agregarProducto() {
 
             const nombre = document.getElementById("nombre").value;
@@ -45,7 +64,16 @@
             const stock = document.getElementById("stock").value;
 
             if (nombre === "" || precio === "" || stock === "") {
-                alert("Completa todos los campos");
+
+                alert("Completa todos los campos.");
+
+                return;
+            }
+
+            if (precio < 0 || stock < 0) {
+
+                alert("El precio y el stock no pueden ser negativos.");
+
                 return;
             }
 
@@ -55,10 +83,17 @@
 
             fila.innerHTML = `
                 <td>${nombre}</td>
+
                 <td>$${precio}</td>
+
                 <td>${stock}</td>
+
                 <td>
-                    <button onclick="this.parentElement.parentElement.remove()">
+                    <button onclick="editarProducto(this)">
+                        Editar
+                    </button>
+
+                    <button onclick="eliminarProducto(this)">
                         Eliminar
                     </button>
                 </td>
@@ -69,8 +104,89 @@
             document.getElementById("nombre").value = "";
             document.getElementById("precio").value = "";
             document.getElementById("stock").value = "";
+
+        }
+
+
+        function editarProducto(boton) {
+
+            const fila = boton.parentElement.parentElement;
+
+            const nombreActual = fila.cells[0].textContent;
+
+            const precioActual =
+                fila.cells[1].textContent.replace("$", "");
+
+            const stockActual =
+                fila.cells[2].textContent;
+
+
+            const nuevoNombre =
+                prompt("Nuevo nombre:", nombreActual);
+
+            if (nuevoNombre === null || nuevoNombre === "") {
+                return;
+            }
+
+
+            const nuevoPrecio =
+                prompt("Nuevo precio:", precioActual);
+
+            if (nuevoPrecio === null || nuevoPrecio === "") {
+                return;
+            }
+
+
+            const nuevoStock =
+                prompt("Nuevo stock:", stockActual);
+
+            if (nuevoStock === null || nuevoStock === "") {
+                return;
+            }
+
+
+            if (nuevoPrecio < 0 || nuevoStock < 0) {
+
+                alert("El precio y el stock no pueden ser negativos.");
+
+                return;
+            }
+
+
+            fila.cells[0].textContent = nuevoNombre;
+
+            fila.cells[1].textContent =
+                "$" + nuevoPrecio;
+
+            fila.cells[2].textContent =
+                nuevoStock;
+        }
+
+        function eliminarProducto(boton) {
+            const confirmar =
+                confirm("¿Seguro que quieres eliminar este producto?");
+            if (confirmar) {
+                const fila =
+                    boton.parentElement.parentElement;
+                fila.remove();
+            }
+        }
+
+        function buscarProducto() {
+            const texto =
+                document.getElementById("buscar").value.toLowerCase();
+            const filas =
+                document.querySelectorAll("#tablaProductos tr");
+            filas.forEach(function(fila) {
+                const nombre =
+                    fila.cells[0].textContent.toLowerCase();
+                if (nombre.includes(texto)) {
+                    fila.style.display = "";
+                } else {
+                    fila.style.display = "none";
+                }
+            });
         }
     </script>
-
 </body>
 </html>
