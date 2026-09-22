@@ -5,7 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CloudStock - Inventario</title>
+
     <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -55,93 +58,219 @@
 
     </div>
 
+
     <script>
 
-        function agregarProducto() {
+        const SUPABASE_URL =
+            "https://lqhxhtlgftncmiatrxaj.supabase.co";
 
-            const nombre = document.getElementById("nombre").value;
-            const precio = document.getElementById("precio").value;
-            const stock = document.getElementById("stock").value;
+        const SUPABASE_KEY =
+            "sb_publishable_vGaD6fO0rk7_c_L95QFo8Q_V6A4jsql";
+
+        const supabaseClient =
+            window.supabase.createClient(
+                SUPABASE_URL,
+                SUPABASE_KEY
+            );
+
+
+        // Cargar productos al abrir la página
+
+        async function cargarProductos() {
+
+            const { data, error } =
+                await supabaseClient
+                    .from("productos")
+                    .select("*")
+                    .order("id", { ascending: true });
+
+
+            if (error) {
+
+                console.error(error);
+
+                alert("Error al cargar los productos.");
+
+                return;
+            }
+
+
+            const tabla =
+                document.getElementById("tablaProductos");
+
+            tabla.innerHTML = "";
+
+
+            data.forEach(function(producto) {
+
+                crearFila(producto);
+
+            });
+
+        }
+
+
+        // Crear fila de producto
+
+        function crearFila(producto) {
+
+            const tabla =
+                document.getElementById("tablaProductos");
+
+            const fila =
+                document.createElement("tr");
+
+            fila.setAttribute("data-id", producto.id);
+
+
+            fila.innerHTML = `
+
+                <td>${producto.nombre}</td>
+
+                <td>$${producto.precio}</td>
+
+                <td>${producto.stock}</td>
+
+                <td>
+
+                    <button onclick="editarProducto(${producto.id})">
+                        Editar
+                    </button>
+
+                    <button onclick="eliminarProducto(${producto.id})">
+                        Eliminar
+                    </button>
+
+                </td>
+
+            `;
+
+
+            tabla.appendChild(fila);
+
+        }
+
+
+        // Agregar producto
+
+        async function agregarProducto() {
+
+            const nombre =
+                document.getElementById("nombre").value.trim();
+
+            const precio =
+                document.getElementById("precio").value;
+
+            const stock =
+                document.getElementById("stock").value;
+
 
             if (nombre === "" || precio === "" || stock === "") {
 
                 alert("Completa todos los campos.");
 
                 return;
+
             }
+
 
             if (precio < 0 || stock < 0) {
 
                 alert("El precio y el stock no pueden ser negativos.");
 
                 return;
+
             }
 
-            const tabla = document.getElementById("tablaProductos");
 
-            const fila = document.createElement("tr");
+            const { error } =
+                await supabaseClient
+                    .from("productos")
+                    .insert([
 
-            fila.innerHTML = `
-                <td>${nombre}</td>
+                        {
+                            nombre: nombre,
+                            precio: Number(precio),
+                            stock: Number(stock)
+                        }
 
-                <td>$${precio}</td>
+                    ]);
 
-                <td>${stock}</td>
 
-                <td>
-                    <button onclick="editarProducto(this)">
-                        Editar
-                    </button>
+            if (error) {
 
-                    <button onclick="eliminarProducto(this)">
-                        Eliminar
-                    </button>
-                </td>
-            `;
+                console.error(error);
 
-            tabla.appendChild(fila);
+                alert("Error al guardar el producto.");
+
+                return;
+
+            }
+
 
             document.getElementById("nombre").value = "";
+
             document.getElementById("precio").value = "";
+
             document.getElementById("stock").value = "";
+
+
+            cargarProductos();
 
         }
 
 
-        function editarProducto(boton) {
+        // Editar producto
 
-            const fila = boton.parentElement.parentElement;
+        async function editarProducto(id) {
 
-            const nombreActual = fila.cells[0].textContent;
+            const { data, error } =
+                await supabaseClient
+                    .from("productos")
+                    .select("*")
+                    .eq("id", id)
+                    .single();
 
-            const precioActual =
-                fila.cells[1].textContent.replace("$", "");
 
-            const stockActual =
-                fila.cells[2].textContent;
+            if (error) {
+
+                alert("Error al obtener el producto.");
+
+                return;
+
+            }
 
 
             const nuevoNombre =
-                prompt("Nuevo nombre:", nombreActual);
+                prompt("Nuevo nombre:", data.nombre);
 
-            if (nuevoNombre === null || nuevoNombre === "") {
+
+            if (nuevoNombre === null || nuevoNombre.trim() === "") {
+
                 return;
+
             }
 
 
             const nuevoPrecio =
-                prompt("Nuevo precio:", precioActual);
+                prompt("Nuevo precio:", data.precio);
+
 
             if (nuevoPrecio === null || nuevoPrecio === "") {
+
                 return;
+
             }
 
 
             const nuevoStock =
-                prompt("Nuevo stock:", stockActual);
+                prompt("Nuevo stock:", data.stock);
+
 
             if (nuevoStock === null || nuevoStock === "") {
+
                 return;
+
             }
 
 
@@ -150,43 +279,125 @@
                 alert("El precio y el stock no pueden ser negativos.");
 
                 return;
+
             }
 
 
-            fila.cells[0].textContent = nuevoNombre;
+            const { error: updateError } =
+                await supabaseClient
+                    .from("productos")
+                    .update({
 
-            fila.cells[1].textContent =
-                "$" + nuevoPrecio;
+                        nombre: nuevoNombre.trim(),
 
-            fila.cells[2].textContent =
-                nuevoStock;
+                        precio: Number(nuevoPrecio),
+
+                        stock: Number(nuevoStock)
+
+                    })
+                    .eq("id", id);
+
+
+            if (updateError) {
+
+                console.error(updateError);
+
+                alert("Error al actualizar el producto.");
+
+                return;
+
+            }
+
+
+            cargarProductos();
+
         }
 
-        function eliminarProducto(boton) {
+
+        // Eliminar producto
+
+        async function eliminarProducto(id) {
+
             const confirmar =
                 confirm("¿Seguro que quieres eliminar este producto?");
-            if (confirmar) {
-                const fila =
-                    boton.parentElement.parentElement;
-                fila.remove();
+
+
+            if (!confirmar) {
+
+                return;
+
             }
+
+
+            const { error } =
+                await supabaseClient
+                    .from("productos")
+                    .delete()
+                    .eq("id", id);
+
+
+            if (error) {
+
+                console.error(error);
+
+                alert("Error al eliminar el producto.");
+
+                return;
+
+            }
+
+
+            cargarProductos();
+
         }
 
+
+        // Buscar producto
+
         function buscarProducto() {
+
             const texto =
-                document.getElementById("buscar").value.toLowerCase();
+                document
+                    .getElementById("buscar")
+                    .value
+                    .toLowerCase();
+
+
             const filas =
-                document.querySelectorAll("#tablaProductos tr");
+                document.querySelectorAll(
+                    "#tablaProductos tr"
+                );
+
+
             filas.forEach(function(fila) {
+
                 const nombre =
-                    fila.cells[0].textContent.toLowerCase();
+                    fila.cells[0]
+                        .textContent
+                        .toLowerCase();
+
+
                 if (nombre.includes(texto)) {
+
                     fila.style.display = "";
+
                 } else {
+
                     fila.style.display = "none";
+
                 }
+
             });
+
         }
+
+
+        // Iniciar
+
+        cargarProductos();
+
     </script>
+
 </body>
+
 </html>
