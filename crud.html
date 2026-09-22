@@ -1,19 +1,76 @@
 <!DOCTYPE html>
-
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>GameZone - CRUD</title>
-
+    <title>CloudStock - Inventario</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <h1>GameZone</h1>
-    <p>Página de gestión de videojuegos</p>
-</body>
 
+    <h1>CloudStock</h1>
+    <p>Inventario en la Nube</p>
+
+    <div class="contenedor">
+        <h2>Agregar producto</h2>
+
+        <input type="text" id="nombre" placeholder="Nombre del producto">
+        <input type="number" id="precio" placeholder="Precio">
+        <input type="number" id="stock" placeholder="Stock">
+
+        <button onclick="agregarProducto()">Agregar producto</button>
+
+        <h2>Productos</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+
+            <tbody id="tablaProductos"></tbody>
+        </table>
+    </div>
+
+    <script>
+        function agregarProducto() {
+
+            const nombre = document.getElementById("nombre").value;
+            const precio = document.getElementById("precio").value;
+            const stock = document.getElementById("stock").value;
+
+            if (nombre === "" || precio === "" || stock === "") {
+                alert("Completa todos los campos");
+                return;
+            }
+
+            const tabla = document.getElementById("tablaProductos");
+
+            const fila = document.createElement("tr");
+
+            fila.innerHTML = `
+                <td>${nombre}</td>
+                <td>$${precio}</td>
+                <td>${stock}</td>
+                <td>
+                    <button onclick="this.parentElement.parentElement.remove()">
+                        Eliminar
+                    </button>
+                </td>
+            `;
+
+            tabla.appendChild(fila);
+
+            document.getElementById("nombre").value = "";
+            document.getElementById("precio").value = "";
+            document.getElementById("stock").value = "";
+        }
+    </script>
+
+</body>
 </html>
